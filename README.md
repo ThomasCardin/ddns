@@ -1,6 +1,6 @@
 # ddns
 
-Managed Cloudflare A record based on No-IP.
+Managed Cloudflare A record based on No-IP hostname IP.
 
 ## Environment variables
 
