@@ -10,13 +10,13 @@ import (
 func UpdateARecord(email string, apiKey string, recordName string, zoneId string, newIp string) {
 	api, err := cloudflare.New(apiKey, email)
 	if err != nil {
-		log.Errorf("error loging in to cloudflare: %s", err.Error())
+		log.Errorf("Error loging in to cloudflare: %s", err.Error())
 		return
 	}
 
 	records, _, err := api.ListDNSRecords(context.Background(), cloudflare.ZoneIdentifier(zoneId), cloudflare.ListDNSRecordsParams{})
 	if err != nil {
-		log.Errorf("error listing records: %s", err.Error())
+		log.Errorf("Error listing records: %s", err.Error())
 		return
 	}
 
@@ -35,11 +35,11 @@ func UpdateARecord(email string, apiKey string, recordName string, zoneId string
 				Tags:     r.Tags,
 			})
 			if err != nil {
-				log.Errorf("error updating DNS record %d", r)
+				log.Errorf("Error updating DNS record %d", r)
 				return
 			}
 
-			log.Infof("%s %s %s updated to %s %s %s", r.Type, r.Name, r.Content, updatedRecord.Type, updatedRecord.Name, updatedRecord.Content)
+			log.Infof("| %s %s %s | updated to | %s %s %s |", r.Type, r.Name, r.Content, updatedRecord.Type, updatedRecord.Name, updatedRecord.Content)
 		}
 	}
 }

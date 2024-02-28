@@ -16,7 +16,7 @@ var currentIP string
 func Ping(hostname string, notifyChan chan NoIpData) {
 	ip, err := net.LookupIP(hostname)
 	if err != nil {
-		log.Errorf("error looking up NoIP hostname IP %s : %s", hostname, err.Error())
+		log.Errorf("Error looking up NoIP hostname IP %s : %s", hostname, err.Error())
 		return
 	}
 
@@ -29,7 +29,7 @@ func Ping(hostname string, notifyChan chan NoIpData) {
 			IP:         newIP,
 		}
 	} else {
-		log.Info("unchanged IP address")
+		log.Info("Unchanged IP address")
 		notifyChan <- NoIpData{
 			PingResult: false,
 		}

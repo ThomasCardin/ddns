@@ -57,7 +57,6 @@ func main() {
 			noip.Ping(noIpHostname, notifyChan)
 		case noIpData := <-notifyChan:
 			if noIpData.PingResult {
-				log.Infof("updating cloudflare record: %s", cRecordName)
 				cloudflare.UpdateARecord(cEmail, cApiKey, cRecordName, cZoneName, noIpData.IP)
 			}
 		}
