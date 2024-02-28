@@ -15,8 +15,10 @@ const (
 	CLOUDFLARE_EMAIL         = "CLOUDFLARE_EMAIL"
 	CLOUDFLARE_API_KEY       = "CLOUDFLARE_API_KEY"
 	CLOUDFLARE_A_RECORD_NAME = "CLOUDFLARE_A_RECORD_NAME"
-	CLOUDFLARE_ZONE_NAME     = "CLOUDFLARE_ZONE_NAME"
+	CLOUDFLARE_ZONE_ID       = "CLOUDFLARE_ZONE_ID"
 )
+
+var IP string
 
 func main() {
 	// Lookup env variables
@@ -40,25 +42,24 @@ func main() {
 		log.Fatalf("%s env var not found!", CLOUDFLARE_A_RECORD_NAME)
 	}
 
-	cZoneName, found := os.LookupEnv("CLOUDFLARE_ZONE_NAME")
+	cZoneName, found := os.LookupEnv("CLOUDFLARE_ZONE_ID")
 	if !found {
-		log.Fatalf("%s env var not found!", CLOUDFLARE_ZONE_NAME)
+		log.Fatalf("%s env var not found!", CLOUDFLARE_ZONE_ID)
 	}
 
 	// Start
 	ticker := time.NewTicker(30 * time.Second)
-	notifyChan := make(chan bool, 1)
+	notifyChan := make(chan noip.NoIpData, 1)
 
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				noip.Ping(noIpHostname, notifyChan)
-			case <-notifyChan:
-				cloudflare.UpdateARecord(cEmail, cApiKey, cRecordName, cZoneName)
+	for {
+		select {
+		case <-ticker.C:
+			noip.Ping(noIpHostname, notifyChan)
+		case noIpData := <-notifyChan:
+			if noIpData.PingResult {
+				log.Infof("updating cloudflare record: %s", cRecordName)
+				cloudflare.UpdateARecord(cEmail, cApiKey, cRecordName, cZoneName, noIpData.IP)
 			}
 		}
-	}()
-
-	log.Info("Program closed gracefully")
+	}
 }

@@ -7,20 +7,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func UpdateARecord(email string, apiKey string, recordName string, zoneName string) {
+func UpdateARecord(email string, apiKey string, recordName string, zoneId string, newIp string) {
 	api, err := cloudflare.New(apiKey, email)
 	if err != nil {
 		log.Errorf("error loging in to cloudflare: %s", err.Error())
 		return
 	}
 
-	zoneID, err := api.ZoneIDByName(zoneName)
-	if err != nil {
-		log.Errorf("error getting the cloudflare zone id: %s", err.Error())
-		return
-	}
-
-	records, _, err := api.ListDNSRecords(context.Background(), cloudflare.ZoneIdentifier(zoneID), cloudflare.ListDNSRecordsParams{})
+	records, _, err := api.ListDNSRecords(context.Background(), cloudflare.ZoneIdentifier(zoneId), cloudflare.ListDNSRecordsParams{})
 	if err != nil {
 		log.Errorf("error listing records: %s", err.Error())
 		return
@@ -28,10 +22,10 @@ func UpdateARecord(email string, apiKey string, recordName string, zoneName stri
 
 	for _, r := range records {
 		if r.Name == recordName {
-			_, err := api.UpdateDNSRecord(context.Background(), cloudflare.ZoneIdentifier(zoneID), cloudflare.UpdateDNSRecordParams{
+			updatedRecord, err := api.UpdateDNSRecord(context.Background(), cloudflare.ZoneIdentifier(zoneId), cloudflare.UpdateDNSRecordParams{
 				Type:     r.Type,
 				Name:     r.Name,
-				Content:  r.Content,
+				Content:  newIp,
 				Data:     r.Data,
 				ID:       r.ID,
 				Priority: r.Priority,
@@ -44,6 +38,8 @@ func UpdateARecord(email string, apiKey string, recordName string, zoneName stri
 				log.Errorf("error updating DNS record %d", r)
 				return
 			}
+
+			log.Infof("%s %s %s updated to %s %s %s", r.Type, r.Name, r.Content, updatedRecord.Type, updatedRecord.Name, updatedRecord.Content)
 		}
 	}
 }
