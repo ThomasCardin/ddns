@@ -42,7 +42,7 @@ func main() {
 		log.Fatalf("%s env var not found!", CLOUDFLARE_A_RECORD_NAME)
 	}
 
-	cZoneName, found := os.LookupEnv("CLOUDFLARE_ZONE_ID")
+	cZoneId, found := os.LookupEnv("CLOUDFLARE_ZONE_ID")
 	if !found {
 		log.Fatalf("%s env var not found!", CLOUDFLARE_ZONE_ID)
 	}
@@ -51,13 +51,16 @@ func main() {
 	ticker := time.NewTicker(30 * time.Second)
 	notifyChan := make(chan noip.NoIpData, 1)
 
+	IP = cloudflare.FetchCurrentIP(cEmail, cApiKey, cRecordName, cZoneId)
+
 	for {
 		select {
 		case <-ticker.C:
-			noip.Ping(noIpHostname, notifyChan)
+			noip.Ping(IP, noIpHostname, notifyChan)
 		case noIpData := <-notifyChan:
 			if noIpData.PingResult {
-				cloudflare.UpdateARecord(cEmail, cApiKey, cRecordName, cZoneName, noIpData.IP)
+				IP = noIpData.IP
+				cloudflare.UpdateARecord(cEmail, cApiKey, cRecordName, cZoneId, noIpData.IP)
 			}
 		}
 	}

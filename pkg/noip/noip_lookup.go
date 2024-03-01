@@ -11,9 +11,7 @@ type NoIpData struct {
 	IP         string
 }
 
-var currentIP string
-
-func Ping(hostname string, notifyChan chan NoIpData) {
+func Ping(currentIp string, hostname string, notifyChan chan NoIpData) {
 	ip, err := net.LookupIP(hostname)
 	if err != nil {
 		log.Errorf("Error looking up NoIP hostname IP %s : %s", hostname, err.Error())
@@ -21,9 +19,9 @@ func Ping(hostname string, notifyChan chan NoIpData) {
 	}
 
 	newIP := ip[0].String()
-	if currentIP != newIP {
-		log.Warnf("IP address updated from %s to: %s", currentIP, newIP)
-		currentIP = newIP
+	if currentIp != newIP {
+		log.Warnf("IP address updated from %s to: %s", currentIp, newIP)
+		currentIp = newIP
 		notifyChan <- NoIpData{
 			PingResult: true,
 			IP:         newIP,
