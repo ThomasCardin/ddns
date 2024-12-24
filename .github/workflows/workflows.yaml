@@ -9,6 +9,9 @@ jobs:
   build-push-ghcr:
     name: Build and push to ghcr
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout repository
