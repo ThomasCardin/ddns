@@ -2,21 +2,26 @@ package cloudflare
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/cloudflare/cloudflare-go"
 	log "github.com/sirupsen/logrus"
 )
 
-func UpdateARecord(email string, apiKey string, recordName string, zoneId string, newIp string) {
+func UpdateARecord(email string, apiKey string, recordName string, zoneId string, newIp string) string {
 	api, err := login(apiKey, email)
 	if err != nil {
 		log.Errorf("Error loging in to cloudflare: %s", err.Error())
+		return ""
 	}
 
 	records, err := listDnsRecords(api, zoneId)
 	if err != nil {
 		log.Errorf("Error listing records: %s", err.Error())
+		return ""
 	}
+
+	var content string
 
 	for _, r := range records {
 		if r.Name == recordName {
@@ -34,13 +39,16 @@ func UpdateARecord(email string, apiKey string, recordName string, zoneId string
 			})
 			if err != nil {
 				log.Errorf("Error updating DNS record %v", r)
-				return
+				return ""
 			}
 
-			log.Infof("| %s %s %s | updated to | %s %s %s |", r.Type, r.Name, r.Content, updatedRecord.Type, updatedRecord.Name, updatedRecord.Content)
+			content := fmt.Sprintf("| %s %s %s | updated to | %s %s %s |", r.Type, r.Name, r.Content, updatedRecord.Type, updatedRecord.Name, updatedRecord.Content)
+			log.Infof(content)
 			break
 		}
 	}
+
+	return content
 }
 
 func FetchCurrentIP(email string, apiKey string, recordName string, zoneId string) string {

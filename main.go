@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ThomasCardin/ddns/pkg/cloudflare"
+	"github.com/ThomasCardin/ddns/pkg/discord"
 	"github.com/ThomasCardin/ddns/pkg/noip"
 	log "github.com/sirupsen/logrus"
 )
@@ -16,6 +17,8 @@ const (
 	CLOUDFLARE_API_KEY       = "CLOUDFLARE_API_KEY"
 	CLOUDFLARE_A_RECORD_NAME = "CLOUDFLARE_A_RECORD_NAME"
 	CLOUDFLARE_ZONE_ID       = "CLOUDFLARE_ZONE_ID"
+
+	DISCORD_WEBHOOK = "DISCORD_WEBHOOK"
 )
 
 var IP string
@@ -47,6 +50,11 @@ func main() {
 		log.Fatalf("%s env var not found!", CLOUDFLARE_ZONE_ID)
 	}
 
+	dWebhook, found := os.LookupEnv("DISCORD_WEBHOOK")
+	if !found {
+		log.Fatalf("%s env var not found!", DISCORD_WEBHOOK)
+	}
+
 	// Start
 	ticker := time.NewTicker(30 * time.Second)
 	notifyChan := make(chan noip.NoIpData, 1)
@@ -60,7 +68,10 @@ func main() {
 		case noIpData := <-notifyChan:
 			if noIpData.PingResult {
 				IP = noIpData.IP
-				cloudflare.UpdateARecord(cEmail, cApiKey, cRecordName, cZoneId, noIpData.IP)
+				content := cloudflare.UpdateARecord(cEmail, cApiKey, cRecordName, cZoneId, noIpData.IP)
+				discord.SendIPChangeNotification(dWebhook, discord.Message{
+					Content: content,
+				})
 			}
 		}
 	}
