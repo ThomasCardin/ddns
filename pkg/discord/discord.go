@@ -19,6 +19,8 @@ func SendIPChangeNotification(webhookURL string, payload Message) {
 		log.Errorf("error encoding discord message: %w", err)
 	}
 
+	log.Infof("message.content: %s", payload.Content)
+
 	resp, err := http.Post(webhookURL, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		log.Errorf("error sending webhook message: %w", err)
@@ -28,6 +30,4 @@ func SendIPChangeNotification(webhookURL string, payload Message) {
 	if resp.StatusCode != http.StatusNoContent {
 		log.Errorf("error sending webhook message %d", resp.StatusCode)
 	}
-
-	log.Infof("discord webhook message sent !")
 }
